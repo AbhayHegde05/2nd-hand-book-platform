@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}My Cart{% endblock %}
+{% block content %}
+<h2>My Cart</h2>
+{% if cart_items %}
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Book</th>
+      <th>Quantity</th>
+      <th>Price</th>
+      <th>Subtotal</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in cart_items %}
+    <tr>
+      <td>{{ item.book.title }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>${{ item.book.price }}</td>
+      <td>${{ item.book.price * item.quantity }}</td>
+      <td>
+        <a href="{{ url_for('buy_book', book_id=item.book.id) }}" class="btn btn-sm btn-success">Buy Now</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<h4 class="text-end">Total: ${{ total|round(2) }}</h4>
+{% else %}
+<p>Your cart is empty.</p>
+{% endif %}
+{% endblock %}

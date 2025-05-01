@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} Details{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <img src="{{ book.image_url or url_for('static', filename='images/default-book.jpg') }}" class="img-fluid" alt="{{ book.title }}">
+  </div>
+  <div class="col-md-8">
+    <h2>{{ book.title }}</h2>
+    <p><strong>Author:</strong> {{ book.author }}</p>
+    <p><strong>Publication Date:</strong> {{ book.publication_date }}</p>
+    <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+    <p><strong>Description:</strong> {{ book.description }}</p>
+    <p><strong>Price:</strong> ${{ book.price }}</p>
+    {% if effective_price %}
+      <p class="text-danger"><strong>Discounted Price:</strong> ${{ effective_price|round(2) }}</p>
+    {% endif %}
+    <div class="mb-3">
+      {% if book.uploader_id == session.get('user_id') %}
+        <span class="badge bg-secondary">This is your book</span>
+      {% else %}
+        <a href="{{ url_for('add_to_cart', book_id=book.id) }}" class="btn btn-primary">Add to Cart</a>
+        <a href="{{ url_for('buy_book', book_id=book.id) }}" class="btn btn-success">Buy Now</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<hr>
+<h3>Reviews</h3>
+{% for review in reviews %}
+<div class="card my-2">
+  <div class="card-body">
+    <h5 class="card-title">{{ review.reviewer.username }} says:</h5>
+    <h6 class="card-subtitle mb-2 text-muted">Rating: {{ review.rating }}/5</h6>
+    <p class="card-text">{{ review.comment }}</p>
+  </div>
+</div>
+{% else %}
+<p>No reviews yet. Be the first to review this book!</p>
+{% endfor %}
+
+{% if session.get('user_id') %}
+<hr>
+<h4>Write a Review</h4>
+<form method="POST" action="{{ url_for('add_review', book_id=book.id) }}">
+  <div class="mb-3">
+    <label for="rating" class="form-label">Rating (1-5)</label>
+    <input type="number" class="form-control" id="rating" name="rating" min="1" max="5" required>
+  </div>
+  <div class="mb-3">
+    <label for="comment" class="form-label">Comment</label>
+    <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+  </div>
+  <button type="submit" class="btn btn-info">Submit Review</button>
+</form>
+{% endif %}
+{% endblock %}
