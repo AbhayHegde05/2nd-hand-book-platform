@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<h2>Payment and Transaction</h2>
+<p>This is a dummy payment page to simulate payment processing.</p>
+<form method="POST" action="{{ url_for('checkout') }}">
+  <div class="mb-3">
+    <label for="cardNumber" class="form-label">Card Number</label>
+    <input type="text" class="form-control" id="cardNumber" placeholder="Enter card number" required>
+  </div>
+  <div class="mb-3">
+    <label for="expiry" class="form-label">Expiry Date</label>
+    <input type="text" class="form-control" id="expiry" placeholder="MM/YY" required>
+  </div>
+  <div class="mb-3">
+    <label for="cvv" class="form-label">CVV</label>
+    <input type="text" class="form-control" id="cvv" placeholder="CVV" required>
+  </div>
+  <button type="submit" class="btn btn-success">Pay Now</button>
+</form>
+{% endblock %}

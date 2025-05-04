@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Edit Book{% endblock %}
+{% block content %}
+<h2>Edit Book</h2>
+<form method="POST" action="{{ url_for('edit_book', book_id=book.id) }}" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label for="title" class="form-label">Title</label>
+    <input type="text" class="form-control" id="title" name="title" value="{{ book.title }}" required>
+  </div>
+  <div class="mb-3">
+    <label for="author" class="form-label">Author</label>
+    <input type="text" class="form-control" id="author" name="author" value="{{ book.author }}" required>
+  </div>
+  <div class="mb-3">
+    <label for="publication_date" class="form-label">Publication Date</label>
+    <input type="date" class="form-control" id="publication_date" name="publication_date" value="{{ book.publication_date }}">
+  </div>
+  <div class="mb-3">
+    <label for="isbn" class="form-label">ISBN</label>
+    <input type="text" class="form-control" id="isbn" name="isbn" value="{{ book.isbn }}">
+  </div>
+  <div class="mb-3">
+    <label for="description" class="form-label">Description</label>
+    <textarea class="form-control" id="description" name="description" rows="3">{{ book.description }}</textarea>
+  </div>
+  <div class="mb-3">
+    <label for="price" class="form-label">Price ($)</label>
+    <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ book.price }}" required>
+  </div>
+  <div class="mb-3">
+    <label for="discount_percentage" class="form-label">Discount Percentage</label>
+    <input type="number" step="0.01" class="form-control" id="discount_percentage" name="discount_percentage" 
+           value="{{ book.discount.discount_percent if book.discount else '' }}">
+    <small id="discountedPricePreview" class="form-text text-muted"></small>
+  </div>
+  <div class="mb-3">
+    <label for="is_rentable" class="form-label">Is Rentable?</label>
+    <select class="form-select" id="is_rentable" name="is_rentable">
+      <option value="yes" {% if book.is_rentable %}selected{% endif %}>Yes</option>
+      <option value="no" {% if not book.is_rentable %}selected{% endif %}>No</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="image" class="form-label">Book Image</label>
+    <input type="file" class="form-control" id="image" name="image">
+  </div>
+  <div class="mb-3">
+    <label for="stock" class="form-label">Stock</label>
+    <input type="number" class="form-control" id="stock" name="stock" value="{{ book.stock }}" required>
+  </div>
+  <button type="submit" class="btn btn-success">Update Book</button>
+</form>
+{% endblock %}
