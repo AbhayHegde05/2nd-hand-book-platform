@@ -4,10 +4,10 @@
 <div class="container">
   <h2>Convert Bonus Points to Cash</h2>
   <p>Your current bonus points: <strong>{{ bonus_points }}</strong></p>
-  <p>Conversion rate: <strong>{{ CONVERSION_RATE }} bonus points = Rs. 1</strong></p>
+  <p>Conversion rate: <strong>20 bonus points = Rs. 1 (i.e., 100 points = Rs. 5)</strong></p>
   <form method="POST" action="{{ url_for('convert_points') }}">
     <div class="mb-3">
-      <label for="points" class="form-label">Points to Convert:</label>
+      <label for="points" class="form-label">Enter Points to Convert:</label>
       <input type="number" class="form-control" id="points" name="points" required>
     </div>
     <button type="submit" class="btn btn-primary">Convert Points</button>

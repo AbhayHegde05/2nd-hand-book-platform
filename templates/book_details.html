@@ -11,9 +11,9 @@
     <p><strong>Publication Date:</strong> {{ book.publication_date }}</p>
     <p><strong>ISBN:</strong> {{ book.isbn }}</p>
     <p><strong>Description:</strong> {{ book.description }}</p>
-    <p><strong>Price:</strong> ${{ book.price }}</p>
+    <p><strong>Price:</strong> Rs. {{ book.price }}</p>
     {% if effective_price %}
-      <p class="text-danger"><strong>Discounted Price:</strong> ${{ effective_price|round(2) }}</p>
+      <p class="text-danger"><strong>Discounted Price:</strong> Rs. {{ effective_price|round(2) }}</p>
     {% endif %}
     <div class="mb-3">
       {% if book.uploader_id == session.get('user_id') %}
@@ -38,7 +38,6 @@
 {% else %}
 <p>No reviews yet. Be the first to review this book!</p>
 {% endfor %}
-
 {% if session.get('user_id') %}
 <hr>
 <h4>Write a Review</h4>
