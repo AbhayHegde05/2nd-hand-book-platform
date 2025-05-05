@@ -1,6 +1,9 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # 2nd-hand-book-platform
 =======
+=======
+>>>>>>> 4558cb13313a726b26fbf8859f0dcda4cc61e92a
 # Book Store App
 
 This is a second-hand book selling application built with Flask, MySQL (via SQLAlchemy), HTML, CSS, JavaScript, and Bootstrap. Users can register, log in, browse available books, add books to their cart, view book details, and simulate transactions (buy or rent books). The project includes features like:
@@ -14,4 +17,7 @@ This is a second-hand book selling application built with Flask, MySQL (via SQLA
 
 ## Project Structure
 
+<<<<<<< HEAD
 >>>>>>> 4558cb1 (First Commit)
+=======
+>>>>>>> 4558cb13313a726b26fbf8859f0dcda4cc61e92a

@@ -4,67 +4,69 @@
 {% set now = current_time %}
 <h2>{{ user.username }}'s Profile</h2>
 <p><strong>Email:</strong> {{ user.email }}</p>
+<!-- New line that displays the seller's bonus points -->
+<p><strong>Bonus Points:</strong> {{ user.bonus_points }}</p>
 <hr>
 <h3>Your Uploaded Books</h3>
 {% if uploaded_books %}
-  <div class="row row-cols-1 row-cols-md-3 g-4">
-    {% for book in uploaded_books %}
-      <div class="col">
-        <div class="card h-100">
-          <img src="{{ book.image_url or url_for('static', filename='images/default-book.jpg') }}" class="card-img-top" alt="{{ book.title }}">
-          <div class="card-body">
-            <h5 class="card-title">{{ book.title }}</h5>
-            <p class="card-text">by {{ book.author }}</p>
-            <p class="card-text">Price: ${{ book.price }}</p>
-            <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-warning">Edit</a>
-            <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST" style="display:inline-block;">
-              <button type="submit" class="btn btn-danger">Delete</button>
-            </form>
-          </div>
-        </div>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  {% for book in uploaded_books %}
+  <div class="col">
+    <div class="card h-100">
+      <img src="{{ book.image_url or url_for('static', filename='images/default-book.jpg') }}" class="card-img-top" alt="{{ book.title }}">
+      <div class="card-body">
+        <h5 class="card-title">{{ book.title }}</h5>
+        <p class="card-text">by {{ book.author }}</p>
+        <p class="card-text">Price: ${{ book.price }}</p>
+        <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-warning">Edit</a>
+        <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST" style="display:inline-block;">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
       </div>
-    {% endfor %}
+    </div>
   </div>
+  {% endfor %}
+</div>
 {% else %}
-  <p>You have not uploaded any books.</p>
+<p>You have not uploaded any books.</p>
 {% endif %}
 <hr>
 <h3>Your Transactions</h3>
 {% set transactions = user.transactions %}
 {% if transactions %}
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Book</th>
-        <th>Type</th>
-        <th>Price</th>
-        <th>Date</th>
-        <th>Status</th>
-        <th>Cancel</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for txn in transactions %}
-      <tr>
-        <td>{{ txn.book_details.title }}</td>
-        <td>{{ txn.transaction_type }}</td>
-        <td>${{ txn.price }}</td>
-        <td>{{ txn.transaction_date.strftime('%Y-%m-%d') }}</td>
-        <td>{{ txn.payment_status }}</td>
-        <td>
-          {% if txn.payment_status != "Cancelled" and (now - txn.transaction_date).days <= 5 %}
-            <form action="{{ url_for('cancel_transaction', transaction_id=txn.id) }}" method="POST">
-              <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
-            </form>
-          {% else %}
-            N/A
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Book</th>
+      <th>Type</th>
+      <th>Price</th>
+      <th>Date</th>
+      <th>Status</th>
+      <th>Cancel</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for txn in transactions %}
+    <tr>
+      <td>{{ txn.book_details.title }}</td>
+      <td>{{ txn.transaction_type }}</td>
+      <td>${{ txn.price }}</td>
+      <td>{{ txn.transaction_date.strftime('%Y-%m-%d') }}</td>
+      <td>{{ txn.payment_status }}</td>
+      <td>
+        {% if txn.payment_status != "Cancelled" and (now - txn.transaction_date).days <= 5 %}
+        <form action="{{ url_for('cancel_transaction', transaction_id=txn.id) }}" method="POST">
+          <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+        </form>
+        {% else %}
+        N/A
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% else %}
-  <p>No transactions found.</p>
+<p>No transactions found.</p>
 {% endif %}
 {% endblock %}

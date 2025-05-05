@@ -11,6 +11,8 @@ class User(db.Model):
     address = db.Column(db.String(200))
     phone = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    bonus_points = db.Column(db.Integer, default=0)  # NEW: Bonus points earned by the seller
+
     # Relationships
     reviews = db.relationship("Review", backref="reviewer", lazy=True)
     transactions = db.relationship("Transaction", backref="buyer", lazy=True)
@@ -28,10 +30,10 @@ class Book(db.Model):
     is_rentable = db.Column(db.Boolean, default=True)
     image_url = db.Column(db.String(300))
     stock = db.Column(db.Integer, default=1)
-    # New uploader_id column: references the user who uploaded the book.
+    # The uploader_id represents the user who uploaded the book.
     uploader_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    # Optional discount applied to a book.
     discount_id = db.Column(db.Integer, db.ForeignKey("discount.id"), nullable=True)
+
     # Relationships
     reviews = db.relationship("Review", backref="book", lazy=True)
     transactions = db.relationship("Transaction", backref="book_details", lazy=True)
@@ -51,7 +53,6 @@ class Discount(db.Model):
     discount_percent = db.Column(db.Float, nullable=False)
     valid_from = db.Column(db.Date)
     valid_to = db.Column(db.Date)
-    # One discount can be applied to many books.
     books = db.relationship("Book", backref="discount", lazy=True)
 
 class Transaction(db.Model):
@@ -63,7 +64,7 @@ class Transaction(db.Model):
     price = db.Column(db.Float, nullable=False)
     rent_start_date = db.Column(db.DateTime)
     rent_end_date = db.Column(db.DateTime)
-    return_date = db.Column(db.DateTime)
+    return_date = db.Column(db.Date)
     payment_status = db.Column(db.String(20), default="Pending")
 
 class CartItem(db.Model):

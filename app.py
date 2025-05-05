@@ -5,11 +5,15 @@ from config import Config
 from models import db, User, Book, Review, Discount, Transaction, CartItem
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 bcrypt = Bcrypt(app)
+
+# Set up Flask-Migrate
+migrate = Migrate(app, db)
 
 # Configure image upload folder and allowed extensions.
 UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'images')
@@ -20,18 +24,21 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def create_tables():
-    # Create all tables if they do not exist without dropping existing data.
     db.create_all()
 
-# ---------------------
+# ----------------------
+# Bonus Point Conversion Config
+# ----------------------
+BONUS_POINTS_PER_SALE = 10    # Award 10 bonus points per sale
+CONVERSION_RATE = 20          # 20 bonus points = Rs. 1
+
+# ----------------------
 # New Homepage, Profile, and Transaction Cancellation Routes
-# ---------------------
+# ----------------------
 @app.route("/")
 def index():
-    # If the user is logged in, go to dashboard
     if "user_id" in session:
         return redirect(url_for("dashboard"))
-    # Else, render the colorful homepage.
     return render_template("home.html")
 
 @app.route("/profile")
@@ -51,7 +58,6 @@ def cancel_transaction(transaction_id):
     if transaction.user_id != session["user_id"]:
         flash("You are not authorized to cancel this transaction.", "danger")
         return redirect(url_for("dashboard"))
-    # Allow cancellation only if within 5 days of the transaction date.
     if (datetime.utcnow() - transaction.transaction_date) > timedelta(days=5):
         flash("Cancellation period has expired.", "danger")
         return redirect(url_for("dashboard"))
@@ -129,7 +135,6 @@ def add_to_cart(book_id):
     if "user_id" not in session:
         return redirect(url_for("login"))
     book = Book.query.get_or_404(book_id)
-    # Prevent a user from adding their own book to the cart.
     if book.uploader_id == session["user_id"]:
         flash("You cannot add your own book to the cart.", "danger")
         return redirect(url_for("dashboard"))
@@ -189,7 +194,6 @@ def add_book():
         except ValueError:
             price = 0.0
         is_rentable = True if request.form.get("is_rentable", "no") == "yes" else False
-        
         discount_percentage = request.form.get("discount_percentage", "")
         discount_id = None
         if discount_percentage:
@@ -208,7 +212,6 @@ def add_book():
                 discount_id = new_discount.id
             except ValueError:
                 discount_id = None
-
         file = request.files.get("image")
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -269,7 +272,6 @@ def edit_book(book_id):
         except ValueError:
             book.price = 0.0
         book.is_rentable = True if request.form.get("is_rentable", "no") == "yes" else False
-        
         discount_percentage = request.form.get("discount_percentage", "")
         if discount_percentage:
             try:
@@ -349,6 +351,13 @@ def buy_book(book_id):
         db.session.add(transaction)
         if book.stock > 0:
             book.stock -= 1
+        # Award bonus points to seller if applicable.
+        if book.uploader_id and book.uploader_id != session["user_id"]:
+            seller = User.query.get(book.uploader_id)
+            if seller:
+                if seller.bonus_points is None:
+                    seller.bonus_points = 0
+                seller.bonus_points += BONUS_POINTS_PER_SALE
         db.session.commit()
         flash("Purchase successful!", "success")
         return redirect(url_for("dashboard"))
@@ -375,7 +384,37 @@ def add_review(book_id):
     flash("Review added successfully!", "success")
     return redirect(url_for("book_details", book_id=book_id))
 
+# ----------------------
+# New Route: Convert Bonus Points to Cash
+# ----------------------
+@app.route("/convert_points", methods=["GET", "POST"])
+def convert_points():
+    if "user_id" not in session:
+        flash("Please log in to continue.", "danger")
+        return redirect(url_for("login"))
+    user = User.query.get_or_404(session["user_id"])
+    if request.method == "POST":
+        try:
+            points_to_convert = int(request.form.get("points"))
+        except (ValueError, TypeError):
+            flash("Please enter a valid number.", "danger")
+            return redirect(url_for("convert_points"))
+        if points_to_convert <= 0:
+            flash("Enter a positive number of points.", "danger")
+            return redirect(url_for("convert_points"))
+        if points_to_convert > user.bonus_points:
+            flash("Insufficient bonus points.", "danger")
+            return redirect(url_for("convert_points"))
+        cash_amount = points_to_convert / CONVERSION_RATE  # e.g., 20 points = Rs. 1
+        user.bonus_points -= points_to_convert
+        db.session.commit()
+        flash(f"Converted {points_to_convert} points into Rs. {cash_amount:.2f}.", "success")
+        return redirect(url_for("profile"))
+    return render_template("convert_points.html", bonus_points=user.bonus_points, CONVERSION_RATE=CONVERSION_RATE)
+
 if __name__ == "__main__":
+    BONUS_POINTS_PER_SALE = 10  # Award 10 bonus points per sale.
+    CONVERSION_RATE = 20        # 20 bonus points = Rs. 1.
     with app.app_context():
         create_tables()
     app.run(debug=True)
