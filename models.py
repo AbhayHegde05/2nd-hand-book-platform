@@ -56,12 +56,10 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     book_id = db.Column(db.Integer, db.ForeignKey("book.id"), nullable=False)
     transaction_date = db.Column(db.DateTime, default=datetime.utcnow)
-    transaction_type = db.Column(db.String(20))  # e.g., 'buy'
+    transaction_type = db.Column(db.String(20))  # now typically "buy"
     price = db.Column(db.Float, nullable=False)
-    rent_start_date = db.Column(db.DateTime)
-    rent_end_date = db.Column(db.DateTime)
-    return_date = db.Column(db.Date)
     payment_status = db.Column(db.String(20), default="Pending")
+
 
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
