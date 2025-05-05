@@ -8,10 +8,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    address = db.Column(db.String(200))
-    phone = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    bonus_points = db.Column(db.Integer, default=0)  # NEW: Bonus points earned by the seller
+    bonus_points = db.Column(db.Integer, default=0)  # Bonus points earned by the seller
 
     # Relationships
     reviews = db.relationship("Review", backref="reviewer", lazy=True)
@@ -27,10 +25,8 @@ class Book(db.Model):
     isbn = db.Column(db.String(20), unique=True)
     description = db.Column(db.Text)
     price = db.Column(db.Float, nullable=False)
-    is_rentable = db.Column(db.Boolean, default=True)
     image_url = db.Column(db.String(300))
     stock = db.Column(db.Integer, default=1)
-    # The uploader_id represents the user who uploaded the book.
     uploader_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     discount_id = db.Column(db.Integer, db.ForeignKey("discount.id"), nullable=True)
 
@@ -60,7 +56,7 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     book_id = db.Column(db.Integer, db.ForeignKey("book.id"), nullable=False)
     transaction_date = db.Column(db.DateTime, default=datetime.utcnow)
-    transaction_type = db.Column(db.String(20))  # e.g., 'buy' or 'rent'
+    transaction_type = db.Column(db.String(20))  # e.g., 'buy'
     price = db.Column(db.Float, nullable=False)
     rent_start_date = db.Column(db.DateTime)
     rent_end_date = db.Column(db.DateTime)

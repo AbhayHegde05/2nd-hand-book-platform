@@ -33,7 +33,7 @@ BONUS_POINTS_PER_SALE = 10    # Award 10 bonus points per sale
 CONVERSION_RATE = 20          # 20 bonus points = Rs. 1
 
 # ----------------------
-# New Homepage, Profile, and Transaction Cancellation Routes
+# Basic Routes and Authentication
 # ----------------------
 @app.route("/")
 def index():
@@ -41,37 +41,6 @@ def index():
         return redirect(url_for("dashboard"))
     return render_template("home.html")
 
-@app.route("/profile")
-def profile():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    user = User.query.get_or_404(session["user_id"])
-    uploaded_books = Book.query.filter_by(uploader_id=user.id).all()
-    return render_template("profile.html", user=user, uploaded_books=uploaded_books, current_time=datetime.utcnow())
-
-@app.route("/cancel_transaction/<int:transaction_id>", methods=["POST"])
-def cancel_transaction(transaction_id):
-    if "user_id" not in session:
-        flash("Please log in.", "danger")
-        return redirect(url_for("login"))
-    transaction = Transaction.query.get_or_404(transaction_id)
-    if transaction.user_id != session["user_id"]:
-        flash("You are not authorized to cancel this transaction.", "danger")
-        return redirect(url_for("dashboard"))
-    if (datetime.utcnow() - transaction.transaction_date) > timedelta(days=5):
-        flash("Cancellation period has expired.", "danger")
-        return redirect(url_for("dashboard"))
-    if transaction.payment_status == "Cancelled":
-        flash("Transaction is already cancelled.", "info")
-        return redirect(url_for("dashboard"))
-    transaction.payment_status = "Cancelled"
-    db.session.commit()
-    flash("Transaction cancelled and amount refunded.", "success")
-    return redirect(url_for("dashboard"))
-
-# ----------------------
-# Authentication Routes
-# ----------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -107,15 +76,74 @@ def logout():
     return redirect(url_for("login"))
 
 # ----------------------
-# Main Application Routes
+# Dashboard Route with Book Search Feature
 # ----------------------
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
-    books = Book.query.all()
+    query = request.args.get("q")
+    if query:
+        books = Book.query.filter(Book.title.ilike(f"%{query}%")).all()
+        if not books:
+            flash("No books matched your search query.", "warning")
+    else:
+        books = Book.query.all()
     return render_template("dashboard.html", books=books)
 
+# ----------------------
+# Profile and Edit Profile Routes
+# ----------------------
+@app.route("/profile")
+def profile():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = User.query.get_or_404(session["user_id"])
+    uploaded_books = Book.query.filter_by(uploader_id=user.id).all()
+    return render_template("profile.html", user=user, uploaded_books=uploaded_books, current_time=datetime.utcnow())
+
+@app.route("/edit_profile", methods=["GET", "POST"])
+def edit_profile():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = User.query.get_or_404(session["user_id"])
+    if request.method == "POST":
+        user.username = request.form.get("username")
+        user.email = request.form.get("email")
+        new_password = request.form.get("password")
+        if new_password:
+            user.password = bcrypt.generate_password_hash(new_password).decode("utf-8")
+        db.session.commit()
+        flash("Profile updated successfully!", "success")
+        return redirect(url_for("profile"))
+    return render_template("edit_profile.html", user=user)
+
+# ----------------------
+# Transaction Cancellation
+# ----------------------
+@app.route("/cancel_transaction/<int:transaction_id>", methods=["POST"])
+def cancel_transaction(transaction_id):
+    if "user_id" not in session:
+        flash("Please log in.", "danger")
+        return redirect(url_for("login"))
+    transaction = Transaction.query.get_or_404(transaction_id)
+    if transaction.user_id != session["user_id"]:
+        flash("You are not authorized to cancel this transaction.", "danger")
+        return redirect(url_for("dashboard"))
+    if (datetime.utcnow() - transaction.transaction_date) > timedelta(days=5):
+        flash("Cancellation period has expired.", "danger")
+        return redirect(url_for("dashboard"))
+    if transaction.payment_status == "Cancelled":
+        flash("Transaction is already cancelled.", "info")
+        return redirect(url_for("dashboard"))
+    transaction.payment_status = "Cancelled"
+    db.session.commit()
+    flash("Transaction cancelled and amount refunded.", "success")
+    return redirect(url_for("dashboard"))
+
+# ----------------------
+# Book Details, Add to Cart, Cart, and Checkout
+# ----------------------
 @app.route("/book/<int:book_id>")
 def book_details(book_id):
     book = Book.query.get_or_404(book_id)
@@ -168,7 +196,7 @@ def checkout():
     return render_template("checkout.html")
 
 # ----------------------
-# Book Management Routes
+# Book Management: Add, Edit, Delete, and Buy Book
 # ----------------------
 @app.route("/add_book", methods=["GET", "POST"])
 def add_book():
@@ -193,7 +221,7 @@ def add_book():
             price = float(price)
         except ValueError:
             price = 0.0
-        is_rentable = True if request.form.get("is_rentable", "no") == "yes" else False
+        # Removed is_rentable feature.
         discount_percentage = request.form.get("discount_percentage", "")
         discount_id = None
         if discount_percentage:
@@ -232,7 +260,6 @@ def add_book():
             isbn=isbn,
             description=description,
             price=price,
-            is_rentable=is_rentable,
             image_url=image_url,
             stock=stock,
             uploader_id=session["user_id"],
@@ -271,7 +298,7 @@ def edit_book(book_id):
             book.price = float(price)
         except ValueError:
             book.price = 0.0
-        book.is_rentable = True if request.form.get("is_rentable", "no") == "yes" else False
+        # Removed is_rentable feature.
         discount_percentage = request.form.get("discount_percentage", "")
         if discount_percentage:
             try:
@@ -384,9 +411,6 @@ def add_review(book_id):
     flash("Review added successfully!", "success")
     return redirect(url_for("book_details", book_id=book_id))
 
-# ----------------------
-# New Route: Convert Bonus Points to Cash
-# ----------------------
 @app.route("/convert_points", methods=["GET", "POST"])
 def convert_points():
     if "user_id" not in session:
@@ -413,8 +437,8 @@ def convert_points():
     return render_template("convert_points.html", bonus_points=user.bonus_points, CONVERSION_RATE=CONVERSION_RATE)
 
 if __name__ == "__main__":
-    BONUS_POINTS_PER_SALE = 10  # Award 10 bonus points per sale.
-    CONVERSION_RATE = 20        # 20 bonus points = Rs. 1.
+    BONUS_POINTS_PER_SALE = 10   # Award 10 bonus points per sale.
+    CONVERSION_RATE = 20         # 20 bonus points = Rs. 1.
     with app.app_context():
         create_tables()
     app.run(debug=True)

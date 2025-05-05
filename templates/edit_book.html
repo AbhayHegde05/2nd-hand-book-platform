@@ -24,22 +24,16 @@
     <textarea class="form-control" id="description" name="description" rows="3">{{ book.description }}</textarea>
   </div>
   <div class="mb-3">
-    <label for="price" class="form-label">Price ($)</label>
+    <label for="price" class="form-label">Price (in Rs.)</label>
     <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ book.price }}" required>
   </div>
   <div class="mb-3">
     <label for="discount_percentage" class="form-label">Discount Percentage</label>
-    <input type="number" step="0.01" class="form-control" id="discount_percentage" name="discount_percentage" 
+    <input type="number" step="0.01" class="form-control" id="discount_percentage" name="discount_percentage"
            value="{{ book.discount.discount_percent if book.discount else '' }}">
     <small id="discountedPricePreview" class="form-text text-muted"></small>
   </div>
-  <div class="mb-3">
-    <label for="is_rentable" class="form-label">Is Rentable?</label>
-    <select class="form-select" id="is_rentable" name="is_rentable">
-      <option value="yes" {% if book.is_rentable %}selected{% endif %}>Yes</option>
-      <option value="no" {% if not book.is_rentable %}selected{% endif %}>No</option>
-    </select>
-  </div>
+  <!-- is_rentable removed from here -->
   <div class="mb-3">
     <label for="image" class="form-label">Book Image</label>
     <input type="file" class="form-control" id="image" name="image">
