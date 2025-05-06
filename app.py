@@ -346,10 +346,22 @@ def delete_book(book_id):
     if book.uploader_id != session["user_id"]:
         flash("You are not authorized to delete this book.", "danger")
         return redirect(url_for("dashboard"))
+    # First, delete any cart items referencing this book.
+    cart_items = CartItem.query.filter_by(book_id=book_id).all()
+    for item in cart_items:
+        db.session.delete(item)
+        
+    # Also, delete any transactions referencing this book.
+    transactions = Transaction.query.filter_by(book_id=book_id).all()
+    for txn in transactions:
+        db.session.delete(txn)
+        
+    # Finally, delete the book itself.
     db.session.delete(book)
     db.session.commit()
     flash("Book deleted successfully!", "success")
     return redirect(url_for("dashboard"))
+
 
 @app.route("/buy/<int:book_id>", methods=["GET", "POST"])
 def buy_book(book_id):
